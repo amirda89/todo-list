@@ -3,7 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <title>ToDo List</title>
   </head>
-  <body></body>
+  <body class="w-[750px] mx-auto bg-gray-900">
+    <h1 class="uppercase text-center">todo list</h1>
+    <div class="w-full flex justify-between">
+      <input type="search" />
+      <select name="" id="">
+        <option value="">ALL</option>
+        <option value=""></option>
+      </select>
+      <button><img src="./icons/moon.svg" alt="dark" /></button>
+    </div>
+    <div class="mx-[115px] mt-[30px] w-[520px]">
+      <div class="flex w-full">
+        <input type="checkbox" />
+        <p class="w-[420px]">NOTE #1</p>
+        <div class="flex">
+          <img src="./icons/edit-pen.svg" alt="edit" />
+          <img src="./icons/delete-bin.svg" alt="delete" />
+        </div>
+      </div>
+    </div>
+  </body>
 </html>
