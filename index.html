@@ -3,28 +3,121 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <title>ToDo List</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      @custom-variant dark (&:where(.dark, .dark *));
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
   </head>
-  <body class="w-[750px] mx-auto bg-gray-900">
-    <h1 class="uppercase text-center">todo list</h1>
-    <div class="w-full flex justify-between">
-      <input type="search" />
-      <select name="" id="">
-        <option value="">ALL</option>
-        <option value=""></option>
-      </select>
-      <button><img src="./icons/moon.svg" alt="dark" /></button>
-    </div>
-    <div class="mx-[115px] mt-[30px] w-[520px]">
-      <div class="flex w-full">
-        <input type="checkbox" />
-        <p class="w-[420px]">NOTE #1</p>
-        <div class="flex">
-          <img src="./icons/edit-pen.svg" alt="edit" />
-          <img src="./icons/delete-bin.svg" alt="delete" />
+  <body
+    class="w-[750px] mx-auto bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-200"
+  >
+    <h1
+      class="uppercase text-center font-[Kanit] font-medium text-[26px] leading-0 tracking-normal mt-[60px] mb-[38px]"
+    >
+      todo list
+    </h1>
+    <div class="w-full flex gap-[16px] justify-between">
+      <div class="relative w-full">
+        <input
+          type="search"
+          placeholder="Search note..."
+          class="border-1 rounded-[5px] w-full border-purple-500 text-[#c3c1e5] pl-[16px] pr-[40px] py-[8px] h-full dark:border-white"
+          id="1"
+        />
+        <div class="absolute inset-y-0 right-0 flex items-center pr-[16px]">
+          <i
+            data-lucide="search"
+            width="25px"
+            height="25px"
+            stroke-width="2"
+            class="text-purple-500 dark:text-white"
+          ></i>
         </div>
       </div>
+      <select
+        name="select"
+        id="select"
+        class="bg-purple-500 rounded-[5px] text-white p-[10px] font-[Kanit] text-[18px] font-medium leading-[100%] tracking-normal"
+      >
+        <option value="all" id="1">ALL</option>
+        <option value="sd" id="2">Complete</option>
+        <option value="sd1" id="2">Incomplete</option>
+      </select>
+      <button class="bg-purple-500 p-[10px] rounded-[5px]" id="theme-toggle">
+        <img src="./icons/moon.svg" alt="dark" />
+      </button>
     </div>
+    <div
+      class="mx-[115px] mt-[30px] w-[520px] flex flex-col gap-[17px]"
+      id="tasks"
+    ></div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      lucide.createIcons();
+
+      const toggleButton = document.getElementById("theme-toggle");
+      const rootEl = document.documentElement;
+      if (
+        localStorage.getItem("theme") === "dark" ||
+        (!localStorage.getItem("theme") &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches)
+      ) {
+        rootEl.classList.add("dark");
+      }
+
+      toggleButton.addEventListener("click", function () {
+        rootEl.classList.toggle("dark");
+        if (rootEl.classList.contains("dark")) {
+          localStorage.setItem("theme", "dark");
+          toggleButton.innerHTML = `<img src="./icons/sun.svg" alt="light" />`;
+        } else {
+          localStorage.setItem("theme", "light");
+          toggleButton.innerHTML = `<img src="./icons/moon.svg" alt="dark" />`;
+        }
+      });
+
+      const tasksArray = [
+        { name: "Atsaa hiih", status: "active" },
+        { name: "Atsaa hiihgu baih", status: "completed" },
+      ];
+
+      function render() {
+        let tasksHTML = "";
+
+        for (let i = 0; i < tasksArray.length; i++) {
+          const task = tasksArray[i];
+
+          tasksHTML += `
+          <div class="group flex w-full gap-[10px] hover: cursor-pointer">
+            <input
+              type="checkbox"
+              class="w-[26px] h-[26px] border-purple-500 accent-purple-500"
+              ${task.status === "completed" ? "checked" : ""}
+            />
+            <p
+              class="w-[420px] font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px]"
+            >
+              ${task.name}
+            </p>
+            <div class="hidden gap-[10px] group-hover:flex">
+              <img src="./icons/edit-pen.svg" alt="edit" />
+              <img src="./icons/delete-bin.svg" alt="delete" />
+            </div>
+          </div>
+          <div class="w-full bg-purple-500 h-[1px] w-full"></div>`;
+        }
+        document.getElementById("tasks").innerHTML = tasksHTML;
+      }
+
+      render();
+    </script>
   </body>
 </html>
