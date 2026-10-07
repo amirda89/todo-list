@@ -23,13 +23,14 @@
     >
       todo list
     </h1>
+
     <div class="w-full flex gap-[16px] justify-between">
       <div class="relative w-full">
         <input
           type="search"
           placeholder="Search note..."
           class="border-1 rounded-[5px] w-full border-purple-700 text-purple-400 pl-[16px] pr-[40px] py-[8px] h-full dark:border-white dark:text-white"
-          id="1"
+          id="searchInput"
         />
         <div class="absolute inset-y-0 right-0 flex items-center pr-[16px]">
           <i
@@ -41,21 +42,24 @@
           ></i>
         </div>
       </div>
+
       <select
         name="select"
         id="select"
         class="bg-purple-700 rounded-[5px] text-white p-[10px] font-[Kanit] text-[18px] font-medium leading-[100%] tracking-normal hover:bg-purple-900 transition-colors duration-300 hover:cursor-pointer"
       >
-        <option value="all" id="1">ALL</option>
-        <option value="sd" id="2">Complete</option>
-        <option value="sd1" id="2">Incomplete</option>
+        <option value="all">ALL</option>
+        <option value="completed">Complete</option>
+        <option value="active">Incomplete</option>
       </select>
+
       <button
         class="bg-purple-700 p-[10px] rounded-[5px] hover:bg-purple-900 transition-colors duration-300 hover:cursor-pointer"
         id="theme-toggle"
       >
         <img src="./icons/moon.svg" alt="dark" />
       </button>
+
       <button
         class="fixed bottom-[40px] right-[calc(50vw-372px)] w-[50px] h-[50px] rounded-full bg-purple-700 shadow-[0_0_4px_0_#6c63ff] flex justify-center items-center text-white font-medium hover:cursor-pointer transition-colors duration-300 hover:bg-purple-900"
         id="openPopupButton"
@@ -63,12 +67,14 @@
         <i data-lucide="plus" stroke-width="3" width="35px" height="35px"></i>
       </button>
     </div>
+
     <div
       class="mx-[115px] mt-[30px] w-[520px] flex flex-col gap-[17px]"
       id="tasks"
     ></div>
+
     <dialog
-      class="mx-auto mt-[160px] rounded-[16px] h-[40vh] w-[400px] px-[18px] py-[30px] bg-white dark:bg-gray-900 border-2 border-white backdrop:blur-md backdrop:bg-black/30"
+      class="mx-auto mt-[160px] rounded-[16px] w-[400px] px-[18px] py-[30px] bg-white dark:bg-gray-900 border-2 border-white backdrop:blur-md backdrop:bg-black/30"
       id="popupDialog"
     >
       <form action="">
@@ -81,19 +87,24 @@
           type="text"
           id="taskInput"
           placeholder="New note..."
-          class="border-1 rounded-[5px] w-full border-purple-700 text-purple-400 dark:border-white dark:text-white mt-[25px] py-[11px] px-[16px]"
+          class="border rounded-[5px] w-full border-purple-700 text-purple-400 dark:border-white dark:text-white mt-[25px] py-[11px] px-[16px]"
         />
         <div class="flex justify-between mt-[200px] px-[20px]">
           <button
-            class="uppercase border-1 border-purple-700 font-[Kanit] font-medium text-[18px] leading-[100%] tracking-normal rounded-[5px] text-purple-500 px-[22px] py-[10px] hover:bg-purple-400 transition-colors duration-200 hover:text-white"
+            class="uppercase border border-purple-700 font-[Kanit] font-medium text-[18px] leading-[100%] tracking-normal rounded-[5px] text-purple-500 px-[22px] py-[10px] hover:bg-purple-400 transition-colors duration-200 hover:text-white"
             type="button"
-            onclick="closeModal()"
+            onclick="
+              () => {
+                popupDialog.close();
+              }
+            "
           >
             Cancel
           </button>
           <button
-            class="uppercase border-1 border-purple-700 font-[Kanit] font-medium text-[18px] leading-[100%] tracking-normal rounded-[5px] text-white px-[22px] py-[10px] bg-purple-600 hover:bg-purple-900 transition-colors duration-200 hover:text-white"
+            class="uppercase border border-purple-700 font-[Kanit] font-medium text-[18px] leading-[100%] tracking-normal rounded-[5px] text-white px-[22px] py-[10px] bg-purple-600 hover:bg-purple-900 transition-colors duration-200 hover:text-white"
             type="button"
+            id="applyButton"
             onclick="addNewTask()"
           >
             Apply
@@ -106,13 +117,32 @@
     <script>
       lucide.createIcons();
 
+      const searchInput = document.getElementById("searchInput");
+      let searchQuery = "";
+
+      const filterSelect = document.getElementById("select");
+      let filterStatus = "all";
+
       const toggleButton = document.getElementById("theme-toggle");
       const rootEl = document.documentElement;
 
       const openPopupButton = document.getElementById("openPopupButton");
       const popupDialog = document.getElementById("popupDialog");
 
-      openPopupButton.addEventListener("click", function () {
+      const taskInput = document.getElementById("taskInput");
+      const applyButton = document.getElementById("applyButton");
+
+      searchInput.addEventListener("input", (event) => {
+        searchQuery = event.target.value.toLowerCase().trim();
+        render();
+      });
+
+      filterSelect.addEventListener("change", (event) => {
+        filterStatus = event.target.value;
+        render();
+      });
+
+      openPopupButton.addEventListener("click", () => {
         popupDialog.showModal();
       });
 
@@ -124,7 +154,7 @@
         rootEl.classList.add("dark");
       }
 
-      toggleButton.addEventListener("click", function () {
+      toggleButton.addEventListener("click", () => {
         rootEl.classList.toggle("dark");
         if (rootEl.classList.contains("dark")) {
           localStorage.setItem("theme", "dark");
@@ -140,9 +170,7 @@
         { name: "huvtsas ugaah", status: "completed" },
       ];
 
-      function addNewTask() {
-        const taskInput = document.getElementById("taskInput");
-
+      const addNewTask = () => {
         const newTask = {
           name: taskInput.value,
           status: "active",
@@ -153,42 +181,75 @@
 
         taskInput.value = "";
         popupDialog.close();
-      }
+      };
 
-      function deleteTask(index) {
-        tasksArray.splice(index, 1);
+      taskInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          addNewTask();
+        }
+      });
+
+      const deleteTask = (index) => {
+        if (confirm("Are you sure?")) {
+          tasksArray.splice(index, 1);
+          render();
+        }
+      };
+
+      const toggleTaskStatus = (index) => {
+        tasksArray[index].status =
+          tasksArray[index].status === "completed" ? "active" : "completed";
         render();
-      }
+      };
+      const editTask = (index) => {
+        render();
+      };
 
-      function closeModal() {
-        popupDialog.close();
-      }
+      const render = () => {
+        const tasksContainer = document.getElementById("tasks");
 
-      function render() {
-        const tasksHTML = tasksArray
-          .map(function (task, index) {
+        const filteredTasks = tasksArray.filter((task) => {
+          const matchesSearch = task.name.toLowerCase().includes(searchQuery);
+          const matchesStatus =
+            filterStatus === "all" || task.status === filterStatus;
+
+          return matchesSearch && matchesStatus;
+        });
+
+        if (!filteredTasks || filteredTasks.length === 0) {
+          tasksContainer.innerHTML = `<div class="flex items-center mt-[20px] flex-col">
+                                        <img src="./icons/empty.png" alt="empty" />
+                                        <p class="font=[Kanit] font-normal text-center text-black dark:text-white mt-[20px] text[20px]">Empty...</p>
+                                      </div>`;
+          return;
+        }
+
+        const tasksHTML = filteredTasks
+          .map((task) => {
+            const originalIndex = tasksArray.indexOf(task);
             return `<div class="group flex w-full gap-[10px] hover: cursor-pointer">
                   <input
                     type="checkbox"
                     class="w-[26px] h-[26px] border-purple-700 accent-purple-700"
                     ${task.status === "completed" ? "checked" : ""}
+                    onChange ="toggleTaskStatus(${originalIndex})"
                   />
                   <p
-                    class="w-[420px] font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px]"
+                    class="w-[420px] font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px] ${task.status === "completed" ? "line-through text-gray-500" : ""}"
                   >
                     ${task.name}
                   </p>
                   <div class="hidden gap-[10px] group-hover:flex">
-                    <button class="bg-[url('./icons/edit-pen.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer"></button>
-                    <button class="bg-[url('./icons/delete-bin.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer" onclick="deleteTask(${index})"></button>
+                    <button class="bg-[url('./icons/edit-pen.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/edit-hover.png')]" onclick="editTask(${originalIndex})"></button>
+                    <button class="bg-[url('./icons/delete-bin.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/delete-bin-hover.png')]" onclick="deleteTask(${originalIndex})"></button>
                   </div>
                 </div>
-                <div class="w-full bg-purple-500 h-[1px] w-full"></div>`;
+                `;
           })
-          .join("");
+          .join(`<div class="w-full bg-purple-500 h-[1px] w-full"></div>`);
 
-        document.getElementById("tasks").innerHTML = tasksHTML;
-      }
+        tasksContainer.innerHTML = tasksHTML;
+      };
 
       render();
     </script>
