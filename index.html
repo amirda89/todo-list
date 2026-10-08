@@ -11,12 +11,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
       rel="stylesheet"
     />
   </head>
   <body
-    class="w-[750px] mx-auto bg-white text-black dark:bg-gray-900 dark:text-white transition-colors duration-200"
+    class="w-[750px] mx-auto bg-white text-black dark:bg-gray-950 dark:text-white transition-colors duration-200"
   >
     <h1
       class="uppercase text-center font-[Kanit] font-medium text-[26px] leading-0 tracking-normal mt-[60px] mb-[38px]"
@@ -43,21 +43,41 @@
         </div>
       </div>
 
-      <select
-        name="select"
-        id="select"
-        class="bg-purple-700 rounded-[5px] text-white p-[10px] font-[Kanit] text-[18px] font-medium leading-[100%] tracking-normal hover:bg-purple-900 transition-colors duration-300 hover:cursor-pointer"
-      >
-        <option value="all">ALL</option>
-        <option value="completed">Complete</option>
-        <option value="active">Incomplete</option>
-      </select>
+      <div class="relative w-48">
+        <select
+          name="select"
+          id="select"
+          class="w-full appearance-none bg-purple-700 hover:bg-purple-800 text-white font-[Kanit] text-[16px] font-medium leading-none tracking-normal pl-4 pr-10 py-3 rounded-lg border border-purple-600/30 shadow-md transition-all duration-200 ease-in-out cursor-pointer"
+        >
+          <option value="all" class="bg-purple-900 text-white">ALL</option>
+          <option value="completed" class="bg-purple-900 text-white">
+            Complete
+          </option>
+          <option value="active" class="bg-purple-900 text-white">
+            Incomplete
+          </option>
+        </select>
+        <!-- custom arrow -->
+        <div
+          class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-white/80"
+        >
+          <svg
+            class="fill-current h-4 w-4"
+            xmlns="http://w3.org"
+            viewBox="0 0 20 20"
+          >
+            <path
+              d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+            />
+          </svg>
+        </div>
+      </div>
 
       <button
         class="bg-purple-700 p-[10px] rounded-[5px] hover:bg-purple-900 transition-colors duration-300 hover:cursor-pointer"
         id="theme-toggle"
       >
-        <img src="./icons/moon.svg" alt="dark" />
+        <img src="./icons/sun.svg" alt="light" />
       </button>
 
       <button
@@ -65,6 +85,13 @@
         id="openPopupButton"
       >
         <i data-lucide="plus" stroke-width="3" width="35px" height="35px"></i>
+      </button>
+
+      <button
+        class="hidden fixed bottom-[40px] left-[calc(50vw-372px)] w-[150px] h-[40px] rounded-md border-2 border-purple-300 bg-purple-700 shadow-[0_0_4px_0_#6c63ff] flex justify-center items-center hover:cursor-pointer hover:bg-purple-500 fonr-[Raleway] font-medium gap-[5px] transition-all duration-300"
+        id="undo"
+      >
+        <span id="undo-text">UNDO (5s)</span> <i data-lucide="rotate-ccw"></i>
       </button>
     </div>
 
@@ -74,7 +101,7 @@
     ></div>
 
     <dialog
-      class="mx-auto mt-[160px] rounded-[16px] w-[400px] px-[18px] py-[30px] bg-white dark:bg-gray-900 border-2 border-white backdrop:blur-md backdrop:bg-black/30"
+      class="mx-auto mt-[160px] rounded-[16px] w-[400px] px-[18px] py-[30px] bg-white dark:bg-gray-950 border-2 border-white backdrop:blur-md backdrop:bg-black/30"
       id="popupDialog"
     >
       <form action="">
@@ -93,11 +120,7 @@
           <button
             class="uppercase border border-purple-700 font-[Kanit] font-medium text-[18px] leading-[100%] tracking-normal rounded-[5px] text-purple-500 px-[22px] py-[10px] hover:bg-purple-400 transition-colors duration-200 hover:text-white"
             type="button"
-            onclick="
-              () => {
-                popupDialog.close();
-              }
-            "
+            onclick="popupDialog.close()"
           >
             Cancel
           </button>
@@ -177,6 +200,7 @@
         };
 
         tasksArray.unshift(newTask);
+        localStorage.setItem("task", JSON.stringify(newTask));
         render();
 
         taskInput.value = "";
@@ -185,13 +209,43 @@
 
       taskInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
+          event.preventDefault();
           addNewTask();
         }
       });
 
+      let timeLeft = 5;
+
+      const triggerUndo = () => {
+        const undo = document.getElementById("undo");
+        const undoText = document.getElementById("undo-text");
+        undo.classList.remove("hidden", "opacity-0", "pointer-events-none");
+        undo.classList.add("opacity-100");
+
+        const countdown = setInterval(() => {
+          timeLeft--;
+          if (timeLeft > 0) {
+            undoText.textContent = `UNDO (${timeLeft}s)`;
+          } else {
+            clearInterval(countdown);
+            undo.classList.add("opacity-0", "pointer-events-none");
+            setTimeout(() => {
+              undo.classList.add("hidden");
+            }, 300);
+          }
+        }, 1000);
+
+        undo.onclick = () => {
+          clearInterval(countdown);
+          undo.classList.add("hidden");
+        };
+      };
+
       const deleteTask = (index) => {
         if (confirm("Are you sure?")) {
+          triggerUndo();
           tasksArray.splice(index, 1);
+          localStorage.removeItem("task");
           render();
         }
       };
@@ -201,9 +255,36 @@
           tasksArray[index].status === "completed" ? "active" : "completed";
         render();
       };
-      const editTask = (index) => {
-        render();
+
+      const cancelEdit = (index) => {
+        document
+          .getElementById(`taskName${index}`)
+          .classList.replace("hidden", "flex");
+        document
+          .getElementById(`taskEdit${index}`)
+          .classList.replace("flex", "hidden");
       };
+
+      const saveTask = (index) => {
+        const newVal = document.getElementById(`taskInput${index}`).value;
+        if (newVal) {
+          tasksArray[index].name = newVal;
+          render();
+        }
+      };
+
+      function editTask(index) {
+        document
+          .getElementById(`taskName${index}`)
+          .classList.replace("flex", "hidden");
+        document
+          .getElementById(`taskEdit${index}`)
+          .classList.replace("hidden", "flex");
+
+        document.getElementById(`taskInput${index}`).value =
+          tasksArray[index].name;
+        document.getElementById(`taskInput${index}`).focus();
+      }
 
       const render = () => {
         const tasksContainer = document.getElementById("tasks");
@@ -232,16 +313,27 @@
                     type="checkbox"
                     class="w-[26px] h-[26px] border-purple-700 accent-purple-700"
                     ${task.status === "completed" ? "checked" : ""}
-                    onChange ="toggleTaskStatus(${originalIndex})"
+                    onchange ="toggleTaskStatus(${originalIndex})"
                   />
-                  <p
-                    class="w-[420px] font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px] ${task.status === "completed" ? "line-through text-gray-500" : ""}"
-                  >
-                    ${task.name}
-                  </p>
-                  <div class="hidden gap-[10px] group-hover:flex">
-                    <button class="bg-[url('./icons/edit-pen.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/edit-hover.png')]" onclick="editTask(${originalIndex})"></button>
-                    <button class="bg-[url('./icons/delete-bin.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/delete-bin-hover.png')]" onclick="deleteTask(${originalIndex})"></button>
+
+                  <div id="taskName${originalIndex}" class="flex">
+                    <p
+                      class="w-[420px] font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px] ${task.status === "completed" ? "line-through text-gray-500" : ""}"
+                    >
+                      ${task.name}
+                    </p>
+                    <div class="hidden gap-[10px] group-hover:flex">
+                      <button class="bg-[url('./icons/edit-pen.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/edit-hover.png')]" onclick="editTask(${originalIndex})"></button>
+                      <button class="bg-[url('./icons/delete-bin.svg')] h-6 w-6 bg-no-repeat bg-center hover:cursor-pointer hover:bg-[url('./icons/delete-bin-hover.png')]" onclick="deleteTask(${originalIndex})"></button>
+                    </div>
+                  </div>
+
+                  <div id="taskEdit${originalIndex}" class="hidden w-full">
+                    <input type="text" id="taskInput${originalIndex}" class="w-full font-[Kanit] font-medium tracking-normal leading-[100%] text-[20px]"/>
+                    <div class="hidden gap-[10px] group-hover:flex">
+                      <button class="h-6 w-6 hover:cursor-pointer" onclick="saveTask(${originalIndex})">✅</button>
+                      <button class="h-6 w-6 hover:cursor-pointer " onclick="cancelEdit(${originalIndex})">❌</button>
+                    </div>
                   </div>
                 </div>
                 `;
