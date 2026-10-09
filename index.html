@@ -138,8 +138,6 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
-      lucide.createIcons();
-
       const searchInput = document.getElementById("searchInput");
       let searchQuery = "";
 
@@ -154,6 +152,10 @@
 
       const taskInput = document.getElementById("taskInput");
       const applyButton = document.getElementById("applyButton");
+
+      const tasksString = localStorage.getItem("tasks");
+
+      let tasksArray = tasksString ? JSON.parse(tasksString) : [];
 
       searchInput.addEventListener("input", (event) => {
         searchQuery = event.target.value.toLowerCase().trim();
@@ -188,19 +190,19 @@
         }
       });
 
-      const tasksArray = [
-        { name: "hool hiih", status: "active" },
-        { name: "huvtsas ugaah", status: "completed" },
-      ];
-
       const addNewTask = () => {
+        if (taskInput.value === "") {
+          popupDialog.close();
+          return;
+        }
+
         const newTask = {
-          name: taskInput.value,
+          name: taskInput.value.trim(),
           status: "active",
         };
 
         tasksArray.unshift(newTask);
-        localStorage.setItem("task", JSON.stringify(newTask));
+
         render();
 
         taskInput.value = "";
@@ -214,13 +216,23 @@
         }
       });
 
-      let timeLeft = 5;
+      let lastDeletedTask = null;
+      let lastDeletedIndex = null;
+      let countdownTimer = null;
 
-      const triggerUndo = () => {
+      const triggerUndo = (removedTask, index) => {
+        lastDeletedTask = removedTask;
+        lastDeletedIndex = index;
+        let timeLeft = 5;
+
         const undo = document.getElementById("undo");
         const undoText = document.getElementById("undo-text");
+
         undo.classList.remove("hidden", "opacity-0", "pointer-events-none");
         undo.classList.add("opacity-100");
+        undoText.textContent = `UNDO (${timeLeft}s)`;
+
+        if (countdown) clearInterval(countdown);
 
         const countdown = setInterval(() => {
           timeLeft--;
@@ -238,15 +250,20 @@
         undo.onclick = () => {
           clearInterval(countdown);
           undo.classList.add("hidden");
+          if (lastDeletedIndex != null && lastDeletedTask != null) {
+            tasksArray.splice(lastDeletedIndex, 0, lastDeletedTask);
+            render();
+            lastDeletedTask = null;
+            lastDeletedIndex = null;
+          }
         };
       };
 
       const deleteTask = (index) => {
         if (confirm("Are you sure?")) {
-          triggerUndo();
-          tasksArray.splice(index, 1);
-          localStorage.removeItem("task");
+          const removedTask = tasksArray.splice(index, 1)[0];
           render();
+          triggerUndo(removedTask, index);
         }
       };
 
@@ -266,7 +283,9 @@
       };
 
       const saveTask = (index) => {
-        const newVal = document.getElementById(`taskInput${index}`).value;
+        const editInput = document.getElementById(`taskInput${index}`);
+        const newVal = editInput.value.trim();
+
         if (newVal) {
           tasksArray[index].name = newVal;
           render();
@@ -287,6 +306,9 @@
       }
 
       const render = () => {
+        localStorage.setItem("tasks", JSON.stringify(tasksArray));
+        lucide.createIcons();
+
         const tasksContainer = document.getElementById("tasks");
 
         const filteredTasks = tasksArray.filter((task) => {
